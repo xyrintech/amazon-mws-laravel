@@ -1,5 +1,5 @@
 {
-    "name": "sonnenglas/laravel6-amazon-mws",
+    "name": "yogiri/laravel6-amazon-mws",
     "description": "Use Amazon's MWS web services with Laravel 6.x. Based on sonnenglas/amazon-mws-laravel package and modified to make it compatible with latest Laravel releases.",
     "license": "Apache-2.0",
     "keywords": ["API", "Amazon", "PHP", "MWS", "Laravel"],
