@@ -1,6 +1,6 @@
-<?php namespace Sonnenglas\AmazonMws;
+<?php namespace Yogiri\AmazonMws;
 
-use Sonnenglas\AmazonMws\AmazonSellersCore;
+use Yogiri\AmazonMws\AmazonSellersCore;
 
 /**
  * Copyright 2013 CPI Group, LLC

@@ -19,7 +19,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Sonnenglas\\AmazonMws\\": "src"
+            "Yogiri\\AmazonMws\\": "src"
         }
     },
     "minimum-stability": "stable"
