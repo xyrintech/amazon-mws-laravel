@@ -120,8 +120,21 @@ abstract class AmazonCore
      *
      * This constructor is called when initializing all objects in this library.
      * The parameters are passed by the child objects' constructors.
-     * @param string $s <p>Name for the store you want to use as seen in the config file.
+     * $s param can be either a string (store name in config file) OR an array, with all key credentials
+     * @param string|array $s <p>Array with all key credentials OR Name for the store you want to use as seen in the config file.
      * If this is not set to a valid name, none of these objects will work.</p>
+     * <p>array expect the following key/values:
+     * <code>
+     * $s = [
+     *   'seller_id'      => 'ASD123',
+     *   'access_key_id'   => 'ASD123',
+     *   'access_secret_key'   => 'ASD123',
+     *   'mws_auth_token'   => 'ASD123',
+     *   'amazon_service_url'   => 'ASD123',
+     *   'mute_log'   => false,
+     * ];
+     * </code>
+     * </p>
      * @param boolean $mock [optional] <p>This is a flag for enabling Mock Mode.
      * When this is set to <b>TRUE</b>, the object will fetch responses from
      * files you specify instead of sending the requests to Amazon.
@@ -134,7 +147,7 @@ abstract class AmazonCore
      */
     protected function __construct($s, $mock = false, $m = null)
     {
-        $this->setConfig();
+        $this->setConfig($s);
         $this->setStore($s);
         $this->setMock($mock, $m);
 
@@ -379,73 +392,118 @@ abstract class AmazonCore
     //  * @param string $path <p>The path to the config file.</p>
     //  * @throws Exception If the file cannot be found or read.
 
-    public function setConfig()
+    public function setConfig($s = null)
     {
-        $AMAZON_SERVICE_URL = Config::get('amazon-mws.AMAZON_SERVICE_URL');
-
+        if(!empty($s['amazon_service_url'])){
+            $AMAZON_SERVICE_URL = $s['amazon_service_url'];
+        }else{
+            $AMAZON_SERVICE_URL = Config::get('amazon-mws.AMAZON_SERVICE_URL');
+        }
         if (isset($AMAZON_SERVICE_URL)) {
             $this->urlbase = $AMAZON_SERVICE_URL;
         } else {
-            throw new Exception("Config file does not exist or cannot be read!");
-        }
+            throw new Exception("Invalid array param or: Config file does not exist or cannot be read!");
+        }        
     }
 
     /**
      * Sets the store values.
      *
-     * This method sets a number of key values from the config file. These values
+     * This method sets key values from array or a number of key values from the config file. These values
      * include your Merchant ID, Access Key ID, and Secret Key, and are critical
      * for making requests with Amazon. If the store cannot be found in the
      * config file, or if any of the key values are missing,
      * the incident will be logged.
-     * @param string $s <p>The store name to look for.</p>
-     * @throws Exception If the file can't be found.
+     * @param string|array $s <p>Array with key/values or the store name to look for.</p>
+     * @throws Exception If the file can't be found and array is empty.
      */
     public function setStore($s)
     {
-        // if (file_exists($this->config)){
-        //     include($this->config);
-        // } else {
-        //     throw new \Exception("Config file does not exist!");
-        // }
 
-        $store = Config::get('amazon-mws.store');
+        if(is_array($s)){
+            if(empty($s['seller_id'])){
+                $this->log("Merchant ID (seller ID) is missing!", 'Warning');
+                throw new \Exception("Merchant ID (seller ID) is missing!");
+            }else{
+                $this->options['SellerId'] = $s['seller_id'];
+            }
 
-        if (array_key_exists($s, $store)) {
-            $this->storeName = $s;
-            if (array_key_exists('merchantId', $store[$s])) {
-                $this->options['SellerId'] = $store[$s]['merchantId'];
-            } else {
-                $this->log("Merchant ID is missing!", 'Warning');
+            if(empty($s['access_key_id'])){
+                $this->log("Access key ID is missing!", 'Warning');
+                throw new \Exception("Access key ID is missing!");                
+            }else{
+                $this->options['AWSAccessKeyId'] = $s['access_key_id'];
             }
-            if (array_key_exists('keyId', $store[$s])) {
-                $this->options['AWSAccessKeyId'] = $store[$s]['keyId'];
-            } else {
-                $this->log("Access Key ID is missing!", 'Warning');
+
+            if(empty($s['access_secret_key'])){
+                $this->log("Access secret key is missing!", 'Warning');
+                throw new \Exception("Access secret key is missing!");                 
+            }else{
+                $this->options['AWSSecretKeyId'] = $s['access_secret_key'];
             }
-            if (!array_key_exists('secretKey', $store[$s])) {
-                $this->log("Secret Key is missing!", 'Warning');
-            }
-            // Overwrite Amazon service url if specified
-            if (array_key_exists('amazonServiceUrl', $store[$s])) {
-                $AMAZON_SERVICE_URL = $store[$s]['amazonServiceUrl'];
+
+            if(empty($s['amazon_service_url'])){
+                $this->log("Amazon service URL is missing!", 'Warning');
+                throw new \Exception("Amazon service URL is missing!");                 
+            }else{
+                $AMAZON_SERVICE_URL = $s['amazon_service_url'];
                 $this->urlbase = $AMAZON_SERVICE_URL;
             }
-            if (array_key_exists('proxyInfo', $store[$s])) {
-                $this->proxyInfo = $store[$s]['proxyInfo'];
-            }
 
-            if (array_key_exists('authToken', $store[$s]) && !empty($store[$s]['authToken'])) {
-                $this->options['MWSAuthToken'] = $store[$s]['authToken'];
+            if (!empty($s['proxy_info'])) {
+                $this->proxyInfo = $s['proxy_info'];
+            }    
+            if (!empty($s['mws_auth_token'])) {
+                $this->options['MWSAuthToken'] = $s['mws_auth_token'];
             }
+            if (!empty($s['marketplace_id'])) {
+                $this->marketplaceId = $s['marketplace_id'];
+            }  
 
-            if (array_key_exists('marketplaceId', $store[$s]) && !empty($store[$s]['marketplaceId'])) {
-                $this->marketplaceId = $store[$s]['marketplaceId'];
+            if (isset($s['mute_log'])) {
+                $this->options['mute_log'] = $s['mute_log'];
+            }else{
+                $this->options['mute_log'] = false;
+            }                                
+        }else{
+            $store = Config::get('amazon-mws.store');
+
+            if (array_key_exists($s, $store)) {
+                $this->storeName = $s;
+                if (array_key_exists('merchantId', $store[$s])) {
+                    $this->options['SellerId'] = $store[$s]['merchantId'];
+                } else {
+                    $this->log("Merchant ID is missing!", 'Warning');
+                }
+                if (array_key_exists('keyId', $store[$s])) {
+                    $this->options['AWSAccessKeyId'] = $store[$s]['keyId'];
+                } else {
+                    $this->log("Access Key ID is missing!", 'Warning');
+                }
+                if (!array_key_exists('secretKey', $store[$s])) {
+                    $this->log("Secret Key is missing!", 'Warning');
+                }
+                // Overwrite Amazon service url if specified
+                if (array_key_exists('amazonServiceUrl', $store[$s])) {
+                    $AMAZON_SERVICE_URL = $store[$s]['amazonServiceUrl'];
+                    $this->urlbase = $AMAZON_SERVICE_URL;
+                }
+                if (array_key_exists('proxyInfo', $store[$s])) {
+                    $this->proxyInfo = $store[$s]['proxyInfo'];
+                }
+
+                if (array_key_exists('authToken', $store[$s]) && !empty($store[$s]['authToken'])) {
+                    $this->options['MWSAuthToken'] = $store[$s]['authToken'];
+                }
+
+                if (array_key_exists('marketplaceId', $store[$s]) && !empty($store[$s]['marketplaceId'])) {
+                    $this->marketplaceId = $store[$s]['marketplaceId'];
+                }
+
+            } else {
+                throw new \Exception("Store $s does not exist!");
+                $this->log("Store $s does not exist!", 'Warning');
             }
-
-        } else {
-            throw new \Exception("Store $s does not exist!");
-            $this->log("Store $s does not exist!", 'Warning');
         }
     }
 
@@ -479,7 +537,13 @@ abstract class AmazonCore
         if ($msg != false) {
             $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
 
-            $muteLog = Config::get('amazon-mws.muteLog');
+            $muteLog = false;
+            if(isset($this->options['mute_log'])){
+                $muteLog = $this->options['mute_log'];
+            }else{
+                $muteLog = Config::get('amazon-mws.muteLog');
+            }
+
             if (isset($muteLog) && $muteLog == true) {
                 return;
             }
@@ -576,7 +640,7 @@ abstract class AmazonCore
     /**
      * Handles generation of the signed query string.
      *
-     * This method uses the secret key from the config file to generate the
+     * This method uses the secret key from the config file (or already stored from $s array param in constructor) to generate the
      * signed query string.
      * It also handles the creation of the timestamp option prior.
      * @return string query string to send to cURL
@@ -589,14 +653,18 @@ abstract class AmazonCore
         // } else {
         //     throw new Exception("Config file does not exist!");
         // }
-
-        $store = Config::get('amazon-mws.store');
-
-        if (array_key_exists($this->storeName, $store) && array_key_exists('secretKey', $store[$this->storeName])) {
-            $secretKey = $store[$this->storeName]['secretKey'];
-        } else {
-            throw new Exception("Secret Key is missing!");
+        $secretKey = null;
+        if(!empty($this->options['AWSSecretKeyId'])){
+            $secretKey = $this->options['AWSSecretKeyId'];
+        }else{
+            $store = Config::get('amazon-mws.store');
+            if (array_key_exists($this->storeName, $store) && array_key_exists('secretKey', $store[$this->storeName])) {
+                $secretKey = $store[$this->storeName]['secretKey'];
+            }
         }
+        if(empty($secretKey)){
+            throw new Exception("Secret Key is missing!");
+        }        
 
         unset($this->options['Signature']);
         $this->options['Timestamp'] = $this->genTime();
