@@ -421,6 +421,7 @@ abstract class AmazonCore
     {
 
         if(is_array($s)){
+            $this->storeName = $s;
             if(empty($s['merchantId'])){
                 $this->log("Merchant ID (seller ID) is missing!", 'Warning');
                 throw new \Exception("Merchant ID (seller ID) is missing!");
