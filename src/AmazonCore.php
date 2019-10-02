@@ -126,12 +126,12 @@ abstract class AmazonCore
      * <p>array expect the following key/values:
      * <code>
      * $s = [
-     *   'seller_id'      => 'ASD123',
-     *   'access_key_id'   => 'ASD123',
-     *   'access_secret_key'   => 'ASD123',
-     *   'mws_auth_token'   => 'ASD123',
-     *   'amazon_service_url'   => 'ASD123',
-     *   'mute_log'   => false,
+     *   'merchantId'      => 'ASD123',
+     *   'keyId'   => 'ASD123',
+     *   'secretKey'   => 'ASD123',
+     *   'authToken'   => 'ASD123',
+     *   'amazonServiceUrl'   => 'ASD123',
+     *   'muteLog'   => false,
      * ];
      * </code>
      * </p>
@@ -394,8 +394,8 @@ abstract class AmazonCore
 
     public function setConfig($s = null)
     {
-        if(!empty($s['amazon_service_url'])){
-            $AMAZON_SERVICE_URL = $s['amazon_service_url'];
+        if(!empty($s['amazonServiceUrl'])){
+            $AMAZON_SERVICE_URL = $s['amazonServiceUrl'];
         }else{
             $AMAZON_SERVICE_URL = Config::get('amazon-mws.AMAZON_SERVICE_URL');
         }
@@ -421,49 +421,49 @@ abstract class AmazonCore
     {
 
         if(is_array($s)){
-            if(empty($s['seller_id'])){
+            if(empty($s['merchantId'])){
                 $this->log("Merchant ID (seller ID) is missing!", 'Warning');
                 throw new \Exception("Merchant ID (seller ID) is missing!");
             }else{
-                $this->options['SellerId'] = $s['seller_id'];
+                $this->options['SellerId'] = $s['merchantId'];
             }
 
-            if(empty($s['access_key_id'])){
+            if(empty($s['keyId'])){
                 $this->log("Access key ID is missing!", 'Warning');
                 throw new \Exception("Access key ID is missing!");                
             }else{
-                $this->options['AWSAccessKeyId'] = $s['access_key_id'];
+                $this->options['AWSAccessKeyId'] = $s['keyId'];
             }
 
-            if(empty($s['access_secret_key'])){
+            if(empty($s['secretKey'])){
                 $this->log("Access secret key is missing!", 'Warning');
                 throw new \Exception("Access secret key is missing!");                 
             }else{
-                $this->options['AWSSecretKeyId'] = $s['access_secret_key'];
+                $this->options['AWSSecretKeyId'] = $s['secretKey'];
             }
 
-            if(empty($s['amazon_service_url'])){
+            if(empty($s['amazonServiceUrl'])){
                 $this->log("Amazon service URL is missing!", 'Warning');
                 throw new \Exception("Amazon service URL is missing!");                 
             }else{
-                $AMAZON_SERVICE_URL = $s['amazon_service_url'];
+                $AMAZON_SERVICE_URL = $s['amazonServiceUrl'];
                 $this->urlbase = $AMAZON_SERVICE_URL;
             }
 
-            if (!empty($s['proxy_info'])) {
-                $this->proxyInfo = $s['proxy_info'];
+            if (!empty($s['proxyInfo'])) {
+                $this->proxyInfo = $s['proxyInfo'];
             }    
-            if (!empty($s['mws_auth_token'])) {
-                $this->options['MWSAuthToken'] = $s['mws_auth_token'];
+            if (!empty($s['authToken'])) {
+                $this->options['MWSAuthToken'] = $s['authToken'];
             }
-            if (!empty($s['marketplace_id'])) {
-                $this->marketplaceId = $s['marketplace_id'];
+            if (!empty($s['marketplaceId'])) {
+                $this->marketplaceId = $s['marketplaceId'];
             }  
 
-            if (isset($s['mute_log'])) {
-                $this->options['mute_log'] = $s['mute_log'];
+            if (isset($s['muteLog'])) {
+                $this->options['muteLog'] = $s['muteLog'];
             }else{
-                $this->options['mute_log'] = false;
+                $this->options['muteLog'] = false;
             }                                
         }else{
             $store = Config::get('amazon-mws.store');
@@ -538,8 +538,8 @@ abstract class AmazonCore
             $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
 
             $muteLog = false;
-            if(isset($this->options['mute_log'])){
-                $muteLog = $this->options['mute_log'];
+            if(isset($this->options['muteLog'])){
+                $muteLog = $this->options['muteLog'];
             }else{
                 $muteLog = Config::get('amazon-mws.muteLog');
             }
