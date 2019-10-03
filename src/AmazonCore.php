@@ -459,13 +459,7 @@ abstract class AmazonCore
             }
             if (!empty($s['marketplaceId'])) {
                 $this->marketplaceId = $s['marketplaceId'];
-            }  
-
-            if (isset($s['muteLog'])) {
-                $this->options['muteLog'] = $s['muteLog'];
-            }else{
-                $this->options['muteLog'] = false;
-            }                                
+            }                              
         }else{
             $store = Config::get('amazon-mws.store');
 
