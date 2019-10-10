@@ -30,6 +30,7 @@ use Yogiri\AmazonMws\AmazonInboundCore;
 class AmazonShipment extends AmazonInboundCore
 {
     private $shipmentId;
+    private $pdfDocument;
 
     /**
      * AmazonShipment ubmits a shipment to Amazon or updates it.
@@ -234,6 +235,24 @@ class AmazonShipment extends AmazonInboundCore
     }
 
     /**
+     * Sets the Page type. (Required for labels)
+     * @param string $s <p>Page type</p>
+     * @return boolean <b>FALSE</b> if improper input
+     */
+    public function setPageType($s)
+    {
+        if (is_string($s) && $s) {
+            if ($s == 'PackageLabel_Letter_2' || $s == 'PackageLabel_Letter_6' || $s == 'PackageLabel_A4_2' || $s == 'PackageLabel_A4_4' || $s == 'PackageLabel_Plain_Paper') {
+                $this->options['PageType'] = $s;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    /**
      * Set whether or not cases are required. (Required if cases used)
      * @param boolean $b <p>Defaults to <b>TRUE</b>.</p>
      */
@@ -345,6 +364,67 @@ class AmazonShipment extends AmazonInboundCore
             return true;
         } else {
             return false;
+        }
+    }
+
+    /**
+     * Sends a request to Amazon to create an Inbound Shipment.
+     *
+     * Submits a <i>GetPackageLabels</i> request to Amazon. In order to do this,
+     * all parameters must be set. Data for these headers can be generated using an
+     * <i>AmazonShipmentPlanner</i> object. Amazon will send back the Package Labels
+     * as a response, which will be returned by this function.
+     * @return string <b>Base65 ZIP</b> if success, <b>FALSE</b> if something goes wrong
+     */
+    public function GetPackageLabels()
+    {
+        $this->pdfDocument = '';
+
+        if (empty($this->options['ShipmentId'])) {
+            $this->log("Shipment ID must be set in order get the labels", 'Warning');
+            return false;
+        }
+        if (empty($this->options['PageType'])) {
+            $this->log("Page type must be set in order get the labels", 'Warning');
+            return false;
+        }
+        $this->options['Action'] = 'GetPackageLabels';
+        
+        $url = $this->urlbase . $this->urlbranch;
+        
+        $query = $this->genQuery();
+        
+        $path = $this->options['Action'] . 'Result';
+        if ($this->mockMode) {
+            $xml = $this->fetchMockFile()->$path;
+        } else {
+            $response = $this->sendRequest($url, array('Post' => $query));
+            if (!$this->checkResponse($response)) {
+                //Get error code and message
+                $error = simplexml_load_string($response['body'])->Error;
+                return [
+                    'error' => [
+                        'code' => (string)$error->Code,
+                        'message' => (string)$error->Message
+                    ]
+                ];
+            }
+
+            $xml = simplexml_load_string($response['body'])->$path;
+        }
+
+        $this->pdfDocument = $xml->TransportDocument->PdfDocument;
+
+        if ($this->pdfDocument) {
+            $this->log("Successfully got Package Labels for Shipment #" . $this->shipmentId);
+            return (string)$this->pdfDocument;
+        } else {
+            return [
+                'error' => [
+                    'code' => 0,
+                    'message' => 'Unknown'
+                ]
+            ];
         }
     }
 
