@@ -429,6 +429,67 @@ class AmazonShipment extends AmazonInboundCore
     }
 
     /**
+     * Sends a request to Amazon to create an Inbound Shipment.
+     *
+     * Submits a <i>GetTransportContent</i> request to Amazon. In order to do this,
+     * all parameters must be set. Data for these headers can be generated using an
+     * <i>AmazonShipmentPlanner</i> object. Amazon will send back the Transport Contents
+     * as a response, which will be returned by this function.
+     * @return object
+     */
+    public function GetTransportContent()
+    {
+        if (empty($this->options['ShipmentId'])) {
+            $this->log("Shipment ID must be set in order get transport contents", 'Warning');
+            return false;
+        }
+
+        $this->options['Action'] = 'GetTransportContent';
+        
+        $url = $this->urlbase . $this->urlbranch;
+        
+        $query = $this->genQuery();
+        
+        $path = $this->options['Action'] . 'Result';
+
+        $return = [];
+        $response = $this->sendRequest($url, array('Post' => $query));
+        
+        if (!$this->checkResponse($response)) {
+            //Get error code and message
+            $error = simplexml_load_string($response['body'])->Error;
+            return [
+                'error' => [
+                    'code' => (string)$error->Code,
+                    'message' => (string)$error->Message
+                ]
+            ];
+        }
+
+        $xml = simplexml_load_string($response['body'])->$path;    
+        
+        if (isset($xml->TransportContent)) {
+            $return['is_partnered'] = !empty($xml->TransportContent->TransportHeader->IsPartnered) ? (string)$xml->TransportContent->TransportHeader->IsPartnered : null;
+            $return['shipment_type'] = !empty($xml->TransportContent->TransportHeader->ShipmentType) ? (string)$xml->TransportContent->TransportHeader->ShipmentType : null;
+            $return['transport_status'] = !empty($xml->TransportContent->TransportResult->TransportStatus) ? (string)$xml->TransportContent->TransportResult->TransportStatus : null;
+            if($return['is_partnered'] === 'true'){
+                $return['is_partnered'] = 1;
+            }elseif($return['is_partnered'] === 'false'){
+                $return['is_partnered'] = 0;
+            }
+            $this->log("Successfully got Transport Contents for Shipment #" . $this->shipmentId);
+            return $return;
+        } else {
+            return [
+                'error' => [
+                    'code' => 0,
+                    'message' => 'Unknown error'
+                ]
+            ];
+        }
+    }
+
+    /**
      * Returns the shipment ID of the newly created/modified order.
      * @return string|boolean single value, or <b>FALSE</b> if Shipment ID not fetched yet
      */
