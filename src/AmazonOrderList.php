@@ -70,7 +70,7 @@ class AmazonOrderList extends AmazonOrderCore implements Iterator
             $this->throttleLimit = $THROTTLE_LIMIT_ORDERLIST;
         }
         if (isset($THROTTLE_TIME_ORDERLIST)) {
-            $this->throttleTime = $THROTTLE_TIME_ORDERLIST;
+            $this->throttleTime = 2;
         }
         $this->throttleGroup = 'ListOrders';
     }
