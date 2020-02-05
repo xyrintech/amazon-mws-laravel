@@ -57,7 +57,7 @@ class AmazonReportList extends AmazonReportsCore implements \Iterator
             $this->throttleLimit = $THROTTLE_LIMIT_REPORTLIST;
         }
         if (isset($THROTTLE_TIME_REPORTLIST)) {
-            $this->throttleTime = $THROTTLE_TIME_REPORTLIST;
+            $this->throttleTime = 2;
         }
     }
 
