@@ -146,19 +146,12 @@ class AmazonReportRequest extends AmazonReportsCore
      */
     public function setTimeLimits($s = null, $e = null)
     {
-        if ($s && is_string($s)) {
-            $times = $this->genTime($s);
-            $this->options['StartDate'] = $times;
+        if(isset($s)){
+            $this->options['StartDate'] = $s;
         }
-        if ($e && is_string($e)) {
-            $timee = $this->genTime($e);
-            $this->options['EndDate'] = $timee;
-        }
-        if (isset($this->options['StartDate']) &&
-            isset($this->options['EndDate']) &&
-            $this->options['StartDate'] > $this->options['EndDate']
-        ) {
-            $this->setTimeLimits($this->options['EndDate'] . ' - 1 second');
+        
+        if(isset($e)){
+            $this->options['EndDate'] = $e;
         }
     }
 
