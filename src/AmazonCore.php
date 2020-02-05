@@ -559,9 +559,11 @@ abstract class AmazonCore
                 default:
                     $loglevel = 'info';
             }
-
-            call_user_func(array('Log', $loglevel), $msg);
-
+            
+            if($muteLog !== false){
+                call_user_func(array('Log', $loglevel), $msg);
+            }
+            
             if (isset($userName) && $userName != '') {
                 $name = $userName;
             } else {
