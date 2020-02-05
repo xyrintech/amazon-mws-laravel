@@ -62,7 +62,7 @@ class AmazonOrder extends AmazonOrderCore
             $this->throttleLimit = $THROTTLE_LIMIT_ORDER;
         }
         if (isset($THROTTLE_TIME_ORDER)) {
-            $this->throttleTime = $THROTTLE_TIME_ORDER;
+            $this->throttleTime = 2;
         }
         $this->throttleGroup = 'GetOrder';
     }
