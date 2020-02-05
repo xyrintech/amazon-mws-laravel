@@ -259,16 +259,19 @@ class AmazonOrder extends AmazonOrderCore
             $d['LatestDeliveryDate'] = (string)$xml->LatestDeliveryDate;
         }
         if (isset($xml->IsBusinessOrder)){
-            $d['IsBusinessOrder'] = (string)$xml->IsBusinessOrder;
+            $d['IsBusinessOrder'] = filter_var($xml->IsBusinessOrder, FILTER_VALIDATE_BOOLEAN);;
         }
         if (isset($xml->PurchaseOrderNumber)){
             $d['PurchaseOrderNumber'] = (string)$xml->PurchaseOrderNumber;
         }
         if (isset($xml->IsPrime)){
-            $d['IsPrime'] = (string)$xml->IsPrime;
+            $d['IsPrime'] = filter_var($xml->IsPrime, FILTER_VALIDATE_BOOLEAN);
         }
         if (isset($xml->IsPremiumOrder)){
             $d['IsPremiumOrder'] = (string)$xml->IsPremiumOrder;
+        }
+        if (isset($xml->IsReplacementOrder)){
+            $d['IsReplacementOrder'] = filter_var($xml->IsReplacementOrder, FILTER_VALIDATE_BOOLEAN);
         }
         
         $this->data = $d;
